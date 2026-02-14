@@ -13,14 +13,27 @@ section .data
     ballRadiusSq dw 25
     ballColor db 4
 
+    screenWidth     dw  320
+    blocksRows      dw  5
+    blocksCols      dw  10
+    blockWidth      dw  28
+    blockHeight     dw  10
+    blockGap        dw  2
+    blockStartX     dw  10
+    blockStartY     dw  30
+    blockColor      db  14
+    currentBlockX   dw  0
+
 section .text
 start:
     mov ax, 0013h 
     int 10h
     mov ax, 0A000h 
     mov es, ax
+
     call drawPaddle
     call drawBall
+    call drawBlocks
 
     mov ah, 00h
     int 16h
@@ -99,5 +112,68 @@ next_x:
     add ax, [ballRadius]
     cmp cx, ax
     jle yloop               
+    popa
+    ret
+
+
+
+
+drawBlocks:
+    pusha
+    xor     si, si          ; row 
+
+.row_loop:
+    cmp     si, [blocksRows]
+    jge     .done
+
+    xor     di, di          ; col 
+
+.col_loop:
+    cmp     di, [blocksCols]
+    jge     .next_row
+
+    
+    mov     ax, di
+    mov     bx, [blockWidth]
+    add     bx, [blockGap]
+    mul     bx
+    add     ax, [blockStartX]
+    mov     [currentBlockX], ax
+
+    
+    mov     ax, si
+    mov     bx, [blockHeight]
+    add     bx, [blockGap]
+    mul     bx
+    add     ax, [blockStartY]
+    mov     bx, ax          
+
+    push    di             
+
+    mov     bp, [blockHeight] 
+
+.block_y_loop:
+    mov     ax, bx          
+    mul     word [screenWidth]
+    add     ax, [currentBlockX]
+    mov     di, ax          ; VRAM pos
+
+    mov     al, [blockColor]
+    mov     cx, [blockWidth]
+    rep     stosb           
+
+    inc     bx              
+    dec     bp
+    jnz     .block_y_loop 
+
+    pop     di              
+    inc     di              
+    jmp     .col_loop
+
+.next_row:
+    inc     si             
+    jmp     .row_loop
+
+.done:
     popa
     ret
