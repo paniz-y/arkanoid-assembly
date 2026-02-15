@@ -177,3 +177,13 @@ drawBlocks:
 .done:
     popa
     ret
+
+
+clear_screen:
+    pusha
+    xor di, di             
+    mov cx, 320*200         
+    xor al, al              ; black
+    rep stosb               
+    popa
+    ret
